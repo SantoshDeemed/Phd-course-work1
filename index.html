@@ -188,6 +188,7 @@
   .dp-id{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--crimson);letter-spacing:0.08em;margin-bottom:10px;font-weight:600;}
   .dp-name{font-size:34px;font-weight:400;margin:0 0 8px;color:var(--navy);}
   .dp-batch{font-size:13.5px;color:var(--text-soft);}
+  .dp-dept{display:inline-block;margin-top:6px;padding:6px 14px;background:#fff3b0;border:1.5px solid #e0b800;border-radius:6px;font-size:13.5px;font-weight:600;color:#5a4500;}
   .seal-badge{
     width:82px;height:82px;border-radius:50%;border:2px solid var(--gold);
     display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;
@@ -247,6 +248,16 @@
     .topbar{padding:14px 20px;}
     .hero{padding:70px 20px 0;}
   }
+
+  /* ---------- BATCH GROUP ROWS + RAC WIDGET ---------- */
+  .roster-table tbody tr.grp-row{cursor:default;background:var(--paper-2);}
+  .roster-table tbody tr.grp-row:hover{background:var(--paper-2);}
+  .grp-row td{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;color:var(--crimson);font-weight:600;padding:12px 18px;}
+  .rac-sel{width:100%;border:1px solid var(--line);padding:10px 12px;font-family:'Inter',sans-serif;font-size:13.5px;color:var(--text);background:var(--paper);outline:none;}
+  .rac-sel:focus{border-color:var(--crimson);}
+  .rac-sub{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px;}
+  .rac-sub label{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-soft);margin-bottom:7px;}
+  .rac-note{font-size:11.5px;color:var(--text-soft);margin-top:10px;}
 
   /* ---------------- MODAL (Add / Edit Scholar) ---------------- */
   .modal-overlay{position:fixed;inset:0;background:rgba(14,42,74,0.55);display:flex;align-items:flex-start;justify-content:center;padding:60px 20px;z-index:200;overflow-y:auto;}
@@ -319,22 +330,30 @@ let YEARS = [];
 let LOADING = true;
 let LOAD_ERROR = null;
 
+/* Data below is taken from "Ph.D. Status batch wise UPDATED.xlsx" (all batches 2020 - 2026 incl. 2022 Sep & Dec). */
+const EXCEL_STUDENTS = [{"id":"P2020-01","sno":1,"name":"VIQAR ALAM (CLINICAL PSYCHOLOGY)","year":"2020","batch":"2020","regno":"950119510","code":"SDU/2020/CPSY/950119510","email":"","contact":"","guide":"DR. RANI SRIVASTAVA","topic":"Covid-19 : EFFECT ON Mental Wellbeing & COPING SKILLS OF health care professionals","status":"RAC Thesis Protocol Done","rac":""},{"id":"P2020-02","sno":2,"name":"R. ILAVAJAGAN (ORTHOPAEDICS (OCCUPATIONAL THERAPY))","year":"2020","batch":"2020","regno":"950119515","code":"SDU/2020/OCCT/950119515","email":"","contact":"","guide":"DR. R.K. SHARMA","topic":"Efficacy of Social Skill Training Versus Conventional Occupational Therapy in enhancing Social Performance among patients with Chronic Schizophrenia – A\nRandomized Control Trial","status":"RAC Thesis Protocol Done","rac":""},{"id":"P2020-03","sno":3,"name":"MRIGANK SHEKAR JHA (ORTHODONTICS & DENTOFACIAL ORTHOPAEDICS)","year":"2020","batch":"2020","regno":"950119516","code":"SDU/2020/ORTHO/950119516","email":"","contact":"","guide":"DR. RAJIV AHLUWALIA","topic":"","status":"Thesis Submission in Process","rac":""},{"id":"P2020-04","sno":4,"name":"ABHINAV RAJ GUPTA (ORTHODONTICS & DENTOFACIAL ORTHOPAEDICS)","year":"2020","batch":"2020","regno":"950119517","code":"SDU/2020/ORTHO/950119517","email":"","contact":"","guide":"DR. RAJIV AHLUWALIA","topic":"","status":"Thesis Submission in Process","rac":""},{"id":"P2020-05","sno":5,"name":"NISHA KURESHI (MEDICAL BIOCHEMISTRY)","year":"2020","batch":"2020","regno":"950120501","code":"SDU/2020/M-BIOC/950120501","email":"","contact":"","guide":"DR. JUHI AGARWAL","topic":"ASSOCIATION BETWEEN SERUM VITAMIN B12 FOLIC ACID & NITROSATIVE STRESS IN HYPOTHYROIDISM","status":"Degree Awarded","rac":""},{"id":"P2020-06","sno":6,"name":"INDU VERMA (MEDICAL BIOCHEMISTRY)","year":"2020","batch":"2020","regno":"950120502","code":"SDU/2020/M-BIOC/950120502","email":"","contact":"","guide":"DR. JYOTI BATRA","topic":"METAL PROFILING AND RISK OF PARKINSON’S DISEASE: A NEW INSIGHT TO METAL MARKERS FOR THE POSSIBLE DIAGNOSIS","status":"Thesis Submission in Process","rac":""},{"id":"P2020-07","sno":7,"name":"JAGRITI BANSAL (MEDICAL MICROBIOLOGY)","year":"2020","batch":"2020","regno":"950120503","code":"SDU/2020/M-MICR/950120503","email":"","contact":"","guide":"DR. DAKSHINA BISHT","topic":"\"Genotypic Characterization of\nMupirocin Resistant Methicillin\nResistant Staphylococcus aureus\nand Mupirocin Resistant\nMethicillin Sensitive\nStaphylococcus aureus Strains\"","status":"Thesis Submission in Process","rac":""},{"id":"P2020-08","sno":8,"name":"KANCHAN KAINTHOLA (MEDICAL MICROBIOLOGY)","year":"2020","batch":"2020","regno":"950120504","code":"SDU/2020/M-MICR/950120504","email":"","contact":"","guide":"DR. DAKSHINA BISHT","topic":"Molecular Characterization Of\nHealth Care Associated Multi Drug\nResistant Candida auris","status":"Thesis Submission in Process","rac":""},{"id":"P2020-09","sno":9,"name":"KM. SANGITA (MEDICAL MICROBIOLOGY)","year":"2020","batch":"2020","regno":"950120505","code":"SDU/2020/M-MICR/950120505","email":"","contact":"","guide":"DR. GEETA GUPTA","topic":"","status":"Degree Awarded","rac":""},{"id":"P2020-10","sno":10,"name":"SHAMSHEER ALI TEETO (MEDICAL MICROBIOLOGY)","year":"2020","batch":"2020","regno":"950120507","code":"SDU/2020/M-MICR/950120507","email":"","contact":"","guide":"DR. GEETA GUPTA","topic":"EVALUATION OF BITE FORCE USING MR DYNO BITE\nRECORDER FOR CLASSIFYING DIFFERENT SKELETAL\nMALOCCLUSIONS AND GROWTH PATTERNS","status":"RAC Thesis Protocol Done","rac":""},{"id":"P2020-11","sno":11,"name":"HIMSHWETA TYAGI (MEDICAL MICROBIOLOGY)","year":"2020","batch":"2020","regno":"950120508","code":"SDU/2020/M-MICR/950120508","email":"","contact":"","guide":"DR. ASHUTOSH RAWAT","topic":"","status":"fee defaullter/LEFT AS INFORM BY DEPUTY REGISTRAR","rac":""},{"id":"P2020-12","sno":12,"name":"ANNU SHARMA (COMMUNITY MEDICINE)","year":"2020","batch":"2020","regno":"950120509","code":"SDU/2020/CMED/950120509","email":"","contact":"","guide":"DR. DEEPIKA AGARWAL","topic":"","status":"Thesis Awarded","rac":""},{"id":"P2020-13","sno":13,"name":"BADRI VISHAL (ORTHOPAEDICS (PHYSIOTHERAPY))","year":"2020","batch":"2020","regno":"950120511","code":"SDU/2020/PHYT/950120511","email":"","contact":"","guide":"DR. DEEPAK RAGHAV","topic":"","status":"Degree Awarded","rac":""},{"id":"P2020-14","sno":14,"name":"K. NARESH BABU (ORTHOPAEDICS (OCCUPATIONAL THERAPY))","year":"2020","batch":"2020","regno":"950120514","code":"SDU/2020/OCCT/950120514","email":"","contact":"","guide":"DR. R.K. SHARMA","topic":"","status":"Degree Awarded","rac":""},{"id":"P2020-15","sno":15,"name":"MAYANK SINGHAL (MAXILLOFACIAL SURGERY)","year":"2020","batch":"2020","regno":"950120518","code":"SDU/2020/MAX-SUR/950120518","email":"","contact":"","guide":"DR. MANOJ GOYAL","topic":"EFFICACY OF BIOMODULATION\nTHERAPY IN THE MANAGEMENT\nOF POSTOPERATIVE SEQUELAE\nAND ITS EFFECTS ON QUALITY OF\nLIFE FOLLOWING REMOVAL OF\nTHIRD MOLARS: A CLINICAL\nSTUDY , SYSTEMATIC REVIEW AND\nMETA-ANALYSIS","status":"Degree Awarded","rac":""},{"id":"P2021J01","sno":1,"name":"HIMANSHU SONI (MEDICAL BIOCHEMISTRY)","year":"2021","batch":"2021 (JUL)","regno":"950121502","code":"SDU/2021(July)/M-BIOC/950121502","email":"","contact":"","guide":"DR. JYOTI BATRA","topic":"GENETIC POLYMORPHISM IN PREDISPOSING THE THYROID GLAND FOR DEVELOPMENT OF PAPILLARY THYROID CANCER IN NORTH INDIA POPULATION","status":"RAC Thesis Protocol Done","rac":""},{"id":"P2021J02","sno":2,"name":"UMA KANT CHAUDHARI (MEDICAL BIOCHEMISTRY)","year":"2021","batch":"2021 (JUL)","regno":"950121503","code":"SDU/2021(July)/M-BIOC/950121503","email":"","contact":"","guide":"DR. JUHI AGARWAL","topic":"Analysis of TCF7L2 (rs7903146) gene polymorphism in type 2 diabetic population in north India","status":"RAC Thesis Protocol Done","rac":"RAC 2"},{"id":"P2021J03","sno":3,"name":"SONALIKA SHARMA (MEDICAL MICROBIOLOGY)","year":"2021","batch":"2021 (JUL)","regno":"950121504","code":"SDU/2021(July)/M-MICR/950121504","email":"","contact":"","guide":"DR. DAKSHINA BISHT","topic":"","status":"","rac":"RAC 2"},{"id":"P2021J04","sno":4,"name":"MANJU PAL (MEDICAL MICROBIOLOGY)","year":"2021","batch":"2021 (JUL)","regno":"950121505","code":"SDU/2021(July)/M-MICR/950121505","email":"","contact":"","guide":"DR. GEETA GUPTA","topic":"PHENOTYPIC AND GENOTYPIC DETECTION OF CARBAPENEMASE PRODUCTION AND BIOFILM FORMATION IN CLINICAL ISOLATES OF PSEUDOMONAS AERUGINOSA","status":"","rac":"RAC 2"},{"id":"P2021J05","sno":5,"name":"KUSHAL SINGH (MEDICAL MICROBIOLOGY)","year":"2021","batch":"2021 (JUL)","regno":"950121506","code":"SDU/2021(July)/M-MICR/950121506","email":"","contact":"","guide":"DR. GEETA GUPTA","topic":"Identification of Hepatitis C Virus Infection association\nbetween Viral Load, Genotyping and cause of Chronic\nLiver Disease","status":"RAC Thesis Protocol Done","rac":"RAC 2"},{"id":"P2021J06","sno":6,"name":"ZANAB NASEEM (MEDICAL MICROBIOLOGY)","year":"2021","batch":"2021 (JUL)","regno":"950121507","code":"SDU/2021(July)/M-MICR/950121507","email":"","contact":"","guide":"DR. ASHUTOSH RAWAT","topic":"ROLE OF TR AND TE IN THE OPTIMIZATION OF\nMAGNETIC RESONANCE SPECTROSCOPY IN THE\nBRAIN","status":"RAC Thesis Protocol Done","rac":"RAC 2"},{"id":"P2021J07","sno":7,"name":"GUNJAN PANDEY (MEDICAL MICROBIOLOGY)","year":"2021","batch":"2021 (JUL)","regno":"950121508","code":"SDU/2021(July)/M-MICR/950121508","email":"","contact":"","guide":"DR. ASHUTOSH RAWAT","topic":"MOLECULAR IDENTIFICATION OF HEPATITIS B VIRUS GENOTYPES IN ASSOCIATION WITH VIRAL LOAD AMONG PATIENT ATTENDING TERTIARY CARE HOSPITAL IN DELHI NCR REGION","status":"RAC Thesis Protocol Done","rac":"RAC 2"},{"id":"P2021J08","sno":8,"name":"PRADEEP KUMAR GUPTA (MEDICAL MICROBIOLOGY)","year":"2021","batch":"2021 (JUL)","regno":"950121509","code":"SDU/2021(July)/M-MICR/950121509","email":"","contact":"","guide":"DR. DAKSHINA BISHT","topic":"Clinical and Molecular Characterization of Dengue Serotypes","status":"RAC Thesis Protocol Done","rac":"RAC 2"},{"id":"P2021J09","sno":9,"name":"MEENAKSHI SHISHODIA (ORTHOPAEDICS (PHYSIOTHERAPY))","year":"2021","batch":"2021 (JUL)","regno":"950121512","code":"SDU/2021(July)/PHYT/950121512","email":"","contact":"","guide":"DR. DEEPAK RAGHAV","topic":"TO STUDY THE FOSFOMYCIN RESISTANCE AMONG EXTENDED-SPECTRUM BETA-LACTAMASE, AMPC AND CARBAPEMMASE-PRODUCING UROPATHOGENS","status":"RAC Thesis Protocol Done","rac":"RAC 2"},{"id":"P2021J10","sno":10,"name":"SONAL CHADHA (CLINICAL PSYCHOLOGY)","year":"2021","batch":"2021 (JUL)","regno":"950121515","code":"SDU/2021(July)/CPSY/950121515","email":"","contact":"","guide":"DR. RANI SRIVASTAVA","topic":"Effectiveness of CBT for management of psychological impact in infertile couple undergoing IVF.","status":"RAC Thesis Protocol Done","rac":""},{"id":"P2021J11","sno":11,"name":"SHANTA PANDIAN (ORTHOPAEDICS (OCCUPATIONAL THERAPY))","year":"2021","batch":"2021 (JUL)","regno":"950121510","code":"SDU/2021(July)/OCCT/950121510","email":"","contact":"","guide":"DR. R.K. SHARMA","topic":"","status":"Degree Awarded","rac":""},{"id":"P2021D01","sno":1,"name":"DINESH KUMAR (MEDICAL BIOCHEMISTRY)","year":"2021","batch":"2021 (DEC)","regno":"950121518","code":"SDU/2021 (Dec)/M-BIOC/950121518","email":"","contact":"","guide":"DR. JYOTI BATRA","topic":"ASSOCIATION OF FTO GENE (RS9939609) POLYMORPHISM WITH INSULIN RESISTANCE AND META BOLIC SYNDROME IN TYPE-2 DIABETES MELLITUS PATIENTS","status":"RAC Thesis Protocol Done","rac":""},{"id":"P2021D02","sno":2,"name":"IMRAN YUSUF (MEDICAL BIOCHEMISTRY)","year":"2021","batch":"2021 (DEC)","regno":"950121519","code":"SDU/2021 (Dec)/M-BIOC/950121519","email":"","contact":"","guide":"DR. JUHI AGARWAL","topic":"STUDY OF EXTENDED LIPID PROFILE AND OXIDATIVE STRESS IN SUBCLINICAL HYPOTHYROIDISM FOR ASSESSMENT OF CARDIOVASCULAR RISK FACTOR","status":"RAC Thesis Protocol Done","rac":""},{"id":"P2021D03","sno":3,"name":"AMIT KUMAR SAH (MEDICAL MICROBIOLOGY)","year":"2021","batch":"2021 (DEC)","regno":"950121520","code":"SDU/2021 (Dec)/M-MICR/950121520","email":"","contact":"","guide":"DR. ASHUTOSH RAWAT","topic":"PREVALENCE AND MOLECULAR CHARACTERISATION OF NITROFURANTOIN RESISTANT IN KLEBSIELLA PNEUMONIAE AS UROPATHOGEN IN TERTIARY CARE HOSPITAL, GHAZIABAD.","status":"RAC Thesis Protocol Done","rac":"RAC 2"},{"id":"P2021D04","sno":4,"name":"SHUBHENDU SINGH (MEDICAL MICROBIOLOGY)","year":"2021","batch":"2021 (DEC)","regno":"950121521","code":"SDU/2021 (Dec)/M-MICR/950121521","email":"","contact":"","guide":"DR. DAKSHINA BISHT","topic":"Diagnostic Efficacy of Fluorescein Diacetate /Ethidium Bromide Smear Microscopy and Ziehl-Neelsen Staining for the Diagnosis of Tuberculosis and Drug Resistant-Tuberculosis.","status":"RAC Thesis Protocol Done","rac":"RAC 2"},{"id":"P2021D05","sno":5,"name":"SADAB (MEDICAL MICROBIOLOGY)","year":"2021","batch":"2021 (DEC)","regno":"950121522","code":"SDU/2021 (Dec)/M-MICR/950121522","email":"","contact":"","guide":"DR. GEETA GUPTA","topic":"FOSFOMYCIN RESISTANCE AMONG ESBL, AMPC AND CARBAPENEMASE PRODUCING UROPATHOGENS","status":"RAC Thesis Protocol Done","rac":"RAC 2"},{"id":"P2021D06","sno":6,"name":"SHASHI KALA PANCHAL (MEDICAL MICROBIOLOGY)","year":"2021","batch":"2021 (DEC)","regno":"950121523","code":"SDU/2021 (Dec)/M-MICR/950121523","email":"","contact":"","guide":"DR. ASHUTOSH RAWAT","topic":"Molecular identification and drug\nsusceptibility testing of Non tuberculous\nmycobacteria (NTM)","status":"RAC Thesis Protocol Done","rac":"RAC 2"},{"id":"P2021D07","sno":7,"name":"VIKASH VERMA (PHARMACOLOGY)","year":"2021","batch":"2021 (DEC)","regno":"950121524","code":"SDU/2021 (Dec)/PHARM/950121524","email":"","contact":"","guide":"Professor Dr. Shaktibala Dutta","topic":"DRUG UTILIZATION AND COST MINIMIZATION ANALYSIS OF PSYCHOTROPIC DRUGS IN PSYCHIATRY OPD OF TERTIARY CARE TEACHING HOSPITAL","status":"RAC Thesis Protocol Done","rac":""},{"id":"P2022S01","sno":1,"name":"SHARAD SINGH (MEDICAL BIOCHEMISTRY)","year":"2022","batch":"2022 (SEP)","regno":"950122608","code":"SDU/2022 (Sept)/M-BIOC/950122608","email":"drsharadsingh65@gmail.com","contact":"","guide":"DR. JYOTI BATRA","topic":"ASSOCIATION OF ET-1 GENE POLYMORPHISM AND AAT IN COPD WITH HYPERTENSION AND RELATION WITH SERUM LEVELS OF ET - 1","status":"RAC Thesis Protocol Done","rac":"RAC 2"},{"id":"P2022S02","sno":2,"name":"URVASHI MIDHA (MEDICAL BIOCHEMISTRY)","year":"2022","batch":"2022 (SEP)","regno":"950122609","code":"SDU/2022 (Sept)/M-BIOC/950122609","email":"urvashimidha28@gmail.com","contact":"","guide":"DR. JUHI AGARWAL","topic":"ASSOCIATION OF LEPTIN GENE POLYMORPHISM RS7799039; G2548A, METABOLIC AND OXIDATIVE STRESS MARKERS IN POLYSYSTIC OVARIAN SYNDROME IN NORTH INDIA","status":"RAC Thesis Protocol Done","rac":""},{"id":"P2022S03","sno":3,"name":"JOLLY GUPTA JAIN (ORTHOPAEDICS (OCCUPATIONAL THERAPY))","year":"2022","batch":"2022 (SEP)","regno":"950122601","code":"SDU/2022 (Sept)/OCCT/950122601","email":"jolly.otist@gmail.com","contact":"","guide":"DR. R.K. SHARMA","topic":"A study to explore the effect of occupational therapy\ninterventions combining fundamental motor skill training on key sensory\nintegration skills in children with autism spectrum disorder.","status":"RAC Thesis Protocol Done","rac":""},{"id":"P2022S04","sno":4,"name":"MANORMA SAINI (PHYSIOLOGY)","year":"2022","batch":"2022 (SEP)","regno":"950122602","code":"SDU/2022 (Sept)/PHYSIO/950122602","email":"manorma.smc@gmail.com","contact":"","guide":"Dr. Manisha Gupta","topic":"EFFECT OF OM MANTRA MEDITATION ON STRESS AND COGNITIVE FUNCTIONS AMONG ADULTS","status":"RAC Thesis Protocol Done","rac":""},{"id":"P2022S05","sno":5,"name":"MANSI MODI (MEDICAL BIOCHEMISTRY)","year":"2022","batch":"2022 (SEP)","regno":"950122603","code":"SDU/2022 (Sept)/M-BIOC/950122603","email":"mansimodi2014@gmail.com","contact":"","guide":"DR. JUHI AGARWAL","topic":"THE ROLE OF VITAMIN D AND VDR GENE POLYMORPHISM (FOK I)OF GENETIC SUSCEPTBILITY FOR THYROID CANCER IN NORTH INDIAN POPULATION","status":"RAC Thesis Protocol Done","rac":""},{"id":"P2022S06","sno":6,"name":"MUKESH KUMAR SINGH (MEDICAL MICROBIOLOGY)","year":"2022","batch":"2022 (SEP)","regno":"950122604","code":"SDU/2022 (Sept)/M-MICR/950122604","email":"mukudeos@gmail.com","contact":"","guide":"DR. ASHUTOSH RAWAT","topic":"In vitro isolation of potential phages against multi drug resistance E.coli: Isolated from clinical samples.","status":"RAC Thesis Protocol Done","rac":"RAC 2"},{"id":"P2022S07","sno":7,"name":"PANKAJ GUPTA (ORTHOPAEDICS (PHYSIOTHERAPY))","year":"2022","batch":"2022 (SEP)","regno":"950122605","code":"SDU/2022 (Sept)/PHYT/950122605","email":"pankaj.gupta@leprosymission.in","contact":"","guide":"DR. DEEPAK RAGHAV","topic":"New modified device for measuring long flexor tightness of hand","status":"RAC Thesis Protocol Done","rac":"RAC 2"},{"id":"P2022S08","sno":8,"name":"RACHNA (CLINICAL PSYCHOLOGY)","year":"2022","batch":"2022 (SEP)","regno":"950122606","code":"SDU/2022 (Sept)/CPSY/950122606","email":"rachnasardhana@gmail.com","contact":"","guide":"DR. RANI SRIVASTAVA","topic":"Relationship between psychological attributes and adjustment among School, adolescents and its outcome","status":"RAC Thesis Protocol Done","rac":"RAC 2"},{"id":"P2022S09","sno":9,"name":"SEEMA SHARMA (CLINICAL PSYCHOLOGY)","year":"2022","batch":"2022 (SEP)","regno":"950122607","code":"SDU/2022 (Sept)/CPSY/950122607","email":"seemacp01@gmail.com","contact":"","guide":"DR. RANI SRIVASTAVA","topic":"Development of scale for Mental Well-being of Working Women","status":"RAC Thesis Protocol Done","rac":"RAC 2"},{"id":"P2022S10","sno":10,"name":"VASUNDHARA RANA (CLINICAL PSYCHOLOGY)","year":"2022","batch":"2022 (SEP)","regno":"950122610","code":"SDU/2022 (Sept)/CPSY/950122610","email":"vasundhara3099@gmail.com","contact":"","guide":"DR. RANI SRIVASTAVA","topic":"Psycho-social correlates of globus","status":"RAC Thesis Protocol Done","rac":"RAC 2"},{"id":"P2022S11","sno":11,"name":"VISHNU L (ORTHOPAEDICS (OCCUPATIONAL THERAPY))","year":"2022","batch":"2022 (SEP)","regno":"950122611","code":"SDU/2022 (Sept)/OCCT/950122611","email":"vishnujazz04@gmail.com","contact":"","guide":"DR. R.K. SHARMA","topic":"","status":"RAC Thesis Protocol Done","rac":"RAC 2"},{"id":"P2022D01","sno":1,"name":"LALIT GUPTA (MIT (RADIO-DIAGNOSIS))","year":"2022","batch":"2022 (DEC)","regno":"950122612","code":"SDU/2022(Dec)/MIT-RD/950122612","email":"","contact":"","guide":"DR. ASHOK KUMAR SHARMA","topic":"DETECTION OF CARBAPENEMASE PRODUCTION AND BIOFILM FORMATION IN CLINICAL ISOLATES OF PSEUDOMONAS AERUGINOSA","status":"RAC Thesis Protocol Done","rac":"RAC 2"},{"id":"P2022D02","sno":2,"name":"MADHVI BHARDWAJ (ORTHODONTICS & DENTOFACIAL ORTHOPAEDICS)","year":"2022","batch":"2022 (DEC)","regno":"950122613","code":"SDU/2022(Dec)/ORTHO/950122613","email":"","contact":"","guide":"DR. RAJIV AHLUWALIA/DR. NISHANT GUPTA","topic":"PHENOTYPIC & GENOTYPIC CORRELATION BETWEEN ABILITY OF BIOFILM FORMATION IN ACINETOBACTER BAUMANNII AND THEIR RESPONSIBLE GENES & MDR PATTERNS IN CLINICAL & ENVIRONMENTAL ISOLATES","status":"RAC Thesis Protocol Done","rac":"RAC 2"},{"id":"P2022D03","sno":3,"name":"MATLOOB AHMED (MEDICAL MICROBIOLOGY)","year":"2022","batch":"2022 (DEC)","regno":"950122614","code":"SDU/2022(Dec)/M-MICR/950122614","email":"","contact":"","guide":"DR. GEETA GUPTA","topic":"","status":"RAC Thesis Protocol Done","rac":"RAC 2"},{"id":"P2022D04","sno":4,"name":"NIHARIKA SINGH (MEDICAL MICROBIOLOGY)","year":"2022","batch":"2022 (DEC)","regno":"950122615","code":"SDU/2022(Dec)/M-MICR/950122615","email":"","contact":"","guide":"DR. DAKSHINA BISHT","topic":"DEVELOPING A COMMUTABLE EXTERNAL QUALITY ASSURANCE [EQA] MATERIAL FOR USE IN HISTOCOMPATIBILITY TESTING – A NOVEL COST-EFFECTIVE APPROACH","status":"RAC Thesis Protocol Done","rac":"RAC 2"},{"id":"P2022D05","sno":5,"name":"SHIVANI SHARMA (MEDICAL MICROBIOLOGY)","year":"2022","batch":"2022 (DEC)","regno":"950122616","code":"SDU/2022(Dec)/M-MICR/950122616","email":"","contact":"","guide":"DR. DAKSHINA BISHT","topic":"PHENOTYPIC AND GENOTYPIC IDENTIFICATION OF VISA/VRSA AMONGST MRSA ISOLATES","status":"RAC Thesis Protocol Done","rac":"RAC 2"},{"id":"P2022D06","sno":6,"name":"SOMYA SHUKLA (MEDICAL MICROBIOLOGY)","year":"2022","batch":"2022 (DEC)","regno":"950122617","code":"SDU/2022(Dec)/M-MICR/950122617","email":"","contact":"","guide":"DR. GEETA GUPTA","topic":"DEVELOPMENT OF SCREENING SCALE FOR MENTAL WELL-BEING OF WORKING WOMEN","status":"RAC Thesis Protocol Done","rac":"RAC 2"},{"id":"P2022D07","sno":7,"name":"SONAL SINGH (PHYSIOLOGY)","year":"2022","batch":"2022 (DEC)","regno":"950122618","code":"SDU/2022(Dec)/PHYSIO/950122618","email":"sonal.singh.gahlot@gmail.com","contact":"","guide":"Dr. Manisha Gupta","topic":"","status":"RAC Thesis Protocol Done","rac":"RAC 2"},{"id":"P2022D08","sno":8,"name":"SUMIT TYAGI (MIT (RADIO-DIAGNOSIS))","year":"2022","batch":"2022 (DEC)","regno":"950122619","code":"SDU/2022(Dec)/MIT-RD/950122619","email":"","contact":"","guide":"DR. ASHOK KUMAR SHARMA","topic":"PSYCHO-SOCIAL CORRELATES OF GLOBUS PHARYNGEUS","status":"RAC Thesis Protocol Done","rac":"RAC 2"},{"id":"P2023S01","sno":1,"name":"SHAZIA SAFI (INTEGRATED IMPLANTOLOGY)","year":"2023","batch":"2023 (SEP)","regno":"950123603","code":"SDU/2023 (SEP)/INT-IMP/950123603","email":"shaziasafi028@gmail.com","contact":"","guide":"DR. AMIT BIHARI LAL","topic":"COMPARATIVE EVALUATION OF BONE HEALING AND QUALITY OF LIFE IN PATIENTS TREATED WITH IMMEDIATE DENTAL IMPLANTS USING HYALURONIC ACID","status":"RAC THESIS PROTOCOL DONE","rac":"RAC 2"},{"id":"P2023S02","sno":2,"name":"ANSHIKA MISHRA (MEDICAL BIOCHEMISTRY)","year":"2023","batch":"2023 (SEP)","regno":"950123604","code":"SDU/2023 (SEP)/M-BIOC/950123604","email":"","contact":"","guide":"DR. JYOTI BATRA","topic":"NOT YET DECIDED","status":"ABSENT IN ALL PAPERS","rac":""},{"id":"P2023S03","sno":3,"name":"RAJ KUMAR (MEDICAL BIOCHEMISTRY)","year":"2023","batch":"2023 (SEP)","regno":"950123605","code":"SDU/2023 (SEP)/M-BIOC/950123605","email":"rajpanwar0102@gmail.com","contact":"","guide":"DR. RAJ NARAYAN GUPTA","topic":"MULTIMARKERS ASSESSMENT IN CHRONIC KIDNEY DISEASE SEVERITY","status":"Eligible for RAC THESIS PROTOCOL","rac":"RAC 1"},{"id":"P2023S04","sno":4,"name":"MANISH TEOTIA (MEDICAL MICROBIOLOGY)","year":"2023","batch":"2023 (SEP)","regno":"950123606","code":"SDU/2023 (SEP)/M-MICR/950123606","email":"manishsinghteotia@gmail.com","contact":"","guide":"DR. ASHUTOSH RAWAT","topic":"MOLECULAR INSIGHTS INTO ANTIMICROBIAL RESISTANCE ESCHERICHIA COLI ACROSS HUMAN, ANIMAL AND ENVIRONMENTAL SOURCES","status":"RAC THESIS PROTOCOL DONE","rac":"RAC 2"},{"id":"P2023S05","sno":5,"name":"SHAHIN ANSARI (MEDICAL MICROBIOLOGY)","year":"2023","batch":"2023 (SEP)","regno":"950123607","code":"SDU/2023 (SEP)/M-MICR/950123607","email":"shahinansari8128@gmail.com","contact":"","guide":"DR. GEETA GUPTA","topic":"MOLECULAR CHARACTERIZATION OF BLAₒₓₐ₋₂₃ AND BLAₒₓₐ₋₅₁ IN CARBAPENEM-RESISTANT ACINETOBACTER BAUMANNII FROM A TERTIARY CARE HOSPITAL","status":"RAC THESIS PROTOCOL DONE","rac":"RAC 2"},{"id":"P2023S06","sno":6,"name":"SHWETA SACHAN (MEDICAL MICROBIOLOGY)","year":"2023","batch":"2023 (SEP)","regno":"950123608","code":"SDU/2023 (SEP)/M-MICR/950123608","email":"shwetasachan37@gmail.com","contact":"","guide":"DR. ASHUTOSH RAWAT","topic":"STUDY OF FREQUENCY OF HVISA INFECTIONS&COMPARISON BETWEEN BRAIN HEART INFUSION AGAR (BHI-4V) & ETESTGRD IDENTIFICATION METHODS WITH PAP-AUC AS GOLD STANDARD","status":"RAC THESIS PROTOCOL DONE","rac":"RAC 2"},{"id":"P2023S07","sno":7,"name":"MISHRA SONI KANHAIYA (PHARMACOLOGY)","year":"2023","batch":"2023 (SEP)","regno":"950123609","code":"SDU/2023 (SEP)/PHARM/950123609","email":"","contact":"","guide":"DR. SABORNI DEY","topic":"COMPARE OF CARDIOVASCULAR OUTCOMES IN TYPES 2 DIABETES PATIENTS RECEIVING EMPAGLIFLOZIN VERSUS SITAGLIPTIN.","status":"RAC THESIS PROTOCOL DONE","rac":"RAC 2"},{"id":"P2023S08","sno":8,"name":"SUMIT SINGHAL (PHARMACOLOGY)","year":"2023","batch":"2023 (SEP)","regno":"950123610","code":"SDU/2023 (SEP)/PHARM/950123610","email":"sumitsinghal9711@gmail.com","contact":"","guide":"DR. SABORNI DEY","topic":"ROLE OF SERUM HEPCIDIN IN IRON DEFICIENCY ANEMIA IN PEDIATRIC POPULATION: A POTENTIAL DIAGNOSTIC AND THERAPEUTIC BIOMARKER","status":"RAC THESIS PROTOCOL DONE","rac":"RAC 2"},{"id":"P2023S09","sno":9,"name":"MURALI KRISHNAN SRINIVASAN (ORTHOPAEDICS (OCCUPATIONAL THERAPY))","year":"2023","batch":"2023 (SEP)","regno":"950123613","code":"SDU/2023 (SEP)/OCCT/950123613","email":"murali.ot@gmail.com@gmail.com","contact":"","guide":"DR. R.K. SHARMA","topic":"","status":"ELIGIBLE FOR RAC PROTOCOL","rac":"RAC 2"},{"id":"P2023S10","sno":10,"name":"AKSHAY BHARGAVA (INTEGRATED IMPLANTOLOGY (PROSTHODONTICS))","year":"2023","batch":"2023 (SEP)","regno":"950123615","code":"SDU/2023 (SEP)/INT-IMP/950123615","email":"","contact":"","guide":"DR. RAJIV GUPTA","topic":"AN EXPERIMENTAL STUDY TO\nEVALUATE THE FUNCTIONING\nOF AN INDIGENOUSLY\nDESIGNED UV-C ACTIVATED\nBIOMEDICAL DEVICE TO\nENHANCE THE\nHYDROPHILICITY AND\nBIOACTIVITY ON THE SURFACE\nOF SLA TREATED TITANIUM","status":"RAC THESIS PROTOCOL DONE","rac":"RAC 2"},{"id":"P2023S11","sno":11,"name":"ALKA AGRAWAL (NEONATOLOGY (PAEDIATRICS))","year":"2023","batch":"2023 (SEP)","regno":"950123617","code":"SDU/2023 (SEP)/NEON/950123617","email":"","contact":"","guide":"DR. URMILA JHAMB","topic":"ROLE OF NEUROBIOMARKERS AND RESISTIVE- INDEX IN NEONATES WITH HYPOXIC ISCHEMIC ENCEPHALOPATHY - A COMPARATIVE STUDY IN PREDICTING ADVERSE NEUROLOGICAL OUTCOME","status":"RAC THESIS PROTOCOL DONE","rac":"RAC 2"},{"id":"P2023D01","sno":1,"name":"NEHA KUSHWAHA (CLINICAL PSYCHOLOGY)","year":"2023","batch":"2023 (DEC)","regno":"950123601","code":"SDU/2023 (DEC)/CPSY/950123601","email":"","contact":"","guide":"DR. RANI SRIVASTAVA","topic":"ASSESSMENT OF PSYCHOLOGICAL WELL-BEING AND MANAGEMENT THROUGH GROUP COUNSELING AMONG MEDICAL UNDERGRADUATES.","status":"RAC THESIS PROTOCOL DONE","rac":"RAC 2"},{"id":"P2023D02","sno":2,"name":"SONAKSHI BHARGAVA (CLINICAL PSYCHOLOGY)","year":"2023","batch":"2023 (DEC)","regno":"950123602","code":"SDU/2023 (DEC)/CPSY/950123602","email":"","contact":"","guide":"DR. RANI SRIVASTAVA","topic":"PSYCHOLOGICAL & COGNITIVE DYSFUNCTIONS AMONG THE CASES OF TYPE 2 DIABETES MELLITUS","status":"RAC THESIS PROTOCOL DONE","rac":"RAC 2"},{"id":"P2023D03","sno":3,"name":"DEEPIKA BOHRA (PHYSIOLOGY)","year":"2023","batch":"2023 (DEC)","regno":"950123611","code":"SDU/2023 (DEC)/PHYSIO/950123611","email":"","contact":"","guide":"DR. MANISHA GUPTA","topic":"GENE EXPRESSION DYNAMICS OF HYPOTHALAMUS-PITUITARY ADRENAL[HPA] AXIS AND STRESS ADAPTATION PATHWAYS IN RESPONSE TO ACADEMIC STRESS AMONG MBBS STUDENTS","status":"RAC THESIS PROTOCOL DONE","rac":"RAC 2"},{"id":"P2023D04","sno":4,"name":"VIKRAM SINGH YADAV (ORTHOPAEDICS (PHYSIOTHERAPY))","year":"2023","batch":"2023 (DEC)","regno":"950123612","code":"SDU/2023 (DEC)/PHYT/950123612","email":"","contact":"","guide":"DR. DEEPAK RAGHAV","topic":"EFFECT OF TAURINE INGESTION AND MOUTH RINSING ON PHYSIOLOGICAL AND PERFORMANCE VARIABLES IN ATHLETES.","status":"RAC THESIS PROTOCOL DONE","rac":"RAC 2"},{"id":"P2023D05","sno":5,"name":"SHWETA WADHWA (ORTHOPAEDICS (OCCUPATIONAL THERAPY))","year":"2023","batch":"2023 (DEC)","regno":"950123614","code":"SDU/2023 (DEC)/OCCT/950123614","email":"","contact":"","guide":"DR. R.K. SHARMA","topic":"EFFECTIVENESS OF STRUCTURED UNITED BRAIN-GYM AND HOLISTIC APPROACH WITH SENSORY INTEGRATED OF FUNCTIONAL INDEPENDENCE IN CHILDREN WITH AUTISM SPECTRUM DISORDER: A RANDOMIZED CONTROL TRAIL","status":"RAC THESIS PROTOCOL DONE","rac":"RAC 2"},{"id":"P2024S01","sno":1,"name":"AKANKSHA SHUKLA (MEDICAL ANATOMY)","year":"2024","batch":"2024 (SEP)","regno":"950124757","code":"SDU/2024 (SEP)/M-ANAT/950124757","email":"","contact":"","guide":"DR. SONIYA GUPTA","topic":"THE HTRA4/TXNIP AXIS AS A REGULATOR OF PREECLAMPSIA PATHOLOGY.","status":"COURSEWORK EXAM","rac":"RAC 2"},{"id":"P2024S02","sno":2,"name":"AMIT KUMAR (MIT (RADIO-DIAGNOSIS))","year":"2024","batch":"2024 (SEP)","regno":"950124758","code":"SDU/2024 (SEP)/MIT-RD/950124758","email":"","contact":"","guide":"PROF. DR. ASHISH KUMAR SHUKLA","topic":"","status":"COURSEWORK EXAM","rac":"RAC 2"},{"id":"P2024S03","sno":3,"name":"ANSHU KUMARI (MIT (RADIO-DIAGNOSIS))","year":"2024","batch":"2024 (SEP)","regno":"950124759","code":"SDU/2024 (SEP)/MIT-RD/950124759","email":"","contact":"","guide":"PROF. DR. ASHISH KUMAR SHUKLA","topic":"CT-DERIVED TOTAL ABDOMINAL VISCERAL FAT VOLUME AS A PREDICTOR OF METABOLIC SYNDROME IN MIDDLE-AGED ADULTS","status":"ELIGIBLE FOR RAC PROTOCOL","rac":"RAC 3"},{"id":"P2024S04","sno":4,"name":"APOORVA NAGAR (ORTHOPAEDICS (PHYSIOTHERAPY))","year":"2024","batch":"2024 (SEP)","regno":"950124760","code":"SDU/2024 (SEP)/PHYT/950124760","email":"","contact":"","guide":"DR. DEEPAK RAGHAV","topic":"ASSOCIATION BETWEEN GYCATED INDEX , HEALTH RELATED FITNESS INDICATORS, AND ACADEMIC PERFORMANCE IN MID ADOLESCENTS SCHOOL GOING CHILDREN.","status":"COURSEWORK EXAM","rac":"RAC 3"},{"id":"P2024S05","sno":5,"name":"ASGAR ALI (MEDICAL BIOCHEMISTRY)","year":"2024","batch":"2024 (SEP)","regno":"950124761","code":"SDU/2024 (SEP)/M-BIOC/950124761","email":"","contact":"","guide":"DR. R.N. GUPTA","topic":"EVALUATION OF SERUM NETRIN-1 AND KIDNEY INJURY MOLECULE-1(KIM-1) IN SEVERITY OF CHRONIC KIDNEY DISEASE","status":"COURSEWORK EXAM","rac":"RAC 2"},{"id":"P2024S06","sno":6,"name":"BINITA SINGH (MEDICAL MICROBIOLOGY)","year":"2024","batch":"2024 (SEP)","regno":"950124762","code":"SDU/2024 (SEP)/M-MICR/950124762","email":"","contact":"","guide":"DR. RITU JAIN","topic":"ANALYSIS OF BIOFILM RELATED GENES (ASL1, HWP1, SAPS) AND ANTIFUNGAL SUSCEPTIBILITY PATTERN OF CANDIDA ALBICANS ISOLATED FROM DENTURE WEARERS","status":"COURSEWORK EXAM","rac":"RAC 3"},{"id":"P2024S07","sno":7,"name":"HIMANSHU MISHRA (MIT (RADIO-DIAGNOSIS))","year":"2024","batch":"2024 (SEP)","regno":"950124763","code":"SDU/2024 (SEP)/MIT-RD/950124763","email":"","contact":"","guide":"PROF. DR. ASHISH KUMAR SHUKLA","topic":"Comparative evaluation of radiological severity indices of Lung fibrosis using HRCT \nLevel 1","status":"COURSEWORK EXAM","rac":"RAC 2"},{"id":"P2024S08","sno":8,"name":"JAVED (INTEGRATED IMPLANTOLOGY)","year":"2024","batch":"2024 (SEP)","regno":"950124764","code":"SDU/2024 (SEP)/INT-IMP/950124764","email":"","contact":"","guide":"DR. KANISHK GUPTA","topic":"","status":"COURSEWORK EXAM","rac":"RAC 3"},{"id":"P2024S09","sno":9,"name":"KAUSAR VAKEEL (PHYSIOLOGY)","year":"2024","batch":"2024 (SEP)","regno":"950124765","code":"SDU/2024 (SEP)/PHYSIO/950124765","email":"","contact":"","guide":"DR. MANISHA GUPTA","topic":"THE INFLUENCE OF ANGIOTENSIN I-CONVERTING ENZYME (ACE) I/D GENE\nPOLYMORPHISM AND ADRB2 ALLELE SPECIFIC PCR ON CARDIOVASCULAR AND MUSCULAR ADAPTATIONS\nFOLLOWING 8 WEEKS OF ISOMETRIC HANDGRIP TRAINING (IHG)\nIN UNTRAINED NORMOTENSIVE SUBJECTS.","status":"COURSEWORK EXAM","rac":""},{"id":"P2024S10","sno":10,"name":"MAMTA BISHNOI (MEDICAL ANATOMY)","year":"2024","batch":"2024 (SEP)","regno":"950124766","code":"SDU/2024 (SEP)/M-ANAT/950124766","email":"","contact":"","guide":"DR. SONIYA GUPTA","topic":"","status":"COURSEWORK EXAM","rac":"RAC 1"},{"id":"P2024S11","sno":11,"name":"MD SHAHNAWAZ ALAM (MEDICAL BIOCHEMISTRY)","year":"2024","batch":"2024 (SEP)","regno":"950124767","code":"SDU/2024 (SEP)/M-BIOC/950124767","email":"","contact":"","guide":"DR. JUHI AGRAWAL","topic":"STUDY OF METABOLIC SYNDROME AND ITS ASSOCIATION WITH PROSTATE CANCER RISK","status":"COURSEWORK EXAM","rac":"RAC 2"},{"id":"P2024S12","sno":12,"name":"PRIYANKA KUMARI (PHYSIOLOGY)","year":"2024","batch":"2024 (SEP)","regno":"950124768","code":"SDU/2024 (SEP)/PHYSIO/950124768","email":"","contact":"","guide":"DR. MANISHA GUPTA","topic":"","status":"COURSEWORK EXAM","rac":"RAC 2"},{"id":"P2024S13","sno":13,"name":"RAJU KUMAR CHAUDHARY (.)","year":"2024","batch":"2024 (SEP)","regno":"950124770","code":"SDU/2024 (SEP)/M-ANAT/950124770","email":"","contact":"","guide":"DR. SONIYA GUPTA","topic":"","status":"COURSEWORK EXAM","rac":"RAC 1"},{"id":"P2024S14","sno":14,"name":"RIDHIMA GUPTA (MEDICAL MICROBIOLOGY)","year":"2024","batch":"2024 (SEP)","regno":"950124771","code":"SDU/2024 (SEP)/M-MICR/950124771","email":"","contact":"","guide":"DR. RITU JAIN","topic":"EVALUATION OF PRATHAMASENSE MOLECULAR DETECTION KIT FOR RAPID DIAGNOSIS OF PNEUMONIA AND ANTIMICROBIAL RESISTANCE IN A TERTIARY CARE HOSPITAL.","status":"COURSEWORK EXAM","rac":"RAC 2"},{"id":"P2024S15","sno":15,"name":"RITIKA DHAKA (CLINICAL PSYCHOLOGY)","year":"2024","batch":"2024 (SEP)","regno":"950124772","code":"SDU/2024 (SEP)/CPSY/950124772","email":"","contact":"","guide":"DR. RANI SRIVASTAVA","topic":"","status":"COURSEWORK EXAM","rac":"RAC 1"},{"id":"P2024S16","sno":16,"name":"SANGEETA KUMARI (MEDICAL MICROBIOLOGY)","year":"2024","batch":"2024 (SEP)","regno":"950124773","code":"SDU/2024 (SEP)/M-MICR/950124773","email":"","contact":"","guide":"DR. RITU JAIN","topic":"MOLECULAR DETECTION OF VARIOUS CARBAPENEMASE RESISTANT GENES USING MULTIPLEX REAL-TIME PCR AMONGST CARBAPENEMASE RESISTANT KLEBSIELLA AND SUSCEPTIBILITY WITH NEWER ANTIBIOTICS.","status":"COURSEWORK EXAM","rac":"RAC 4"},{"id":"P2024S17","sno":17,"name":"SANJAY KUMAR LABH (ORTHODONTICS & DENTOFACIAL ORTHOPAEDICS)","year":"2024","batch":"2024 (SEP)","regno":"950124774","code":"SDU/2024 (SEP)/ORTHO/950124774","email":"","contact":"","guide":"DR. NISHANT GUPTA\nDR. TINA CHUGH","topic":"","status":"COURSEWORK EXAM","rac":"RAC 1"},{"id":"P2024S18","sno":18,"name":"SARVRAJ VARINDER SINGH KOHLI (ORTHODONTICS & DENTOFACIAL ORTHOPAEDICS)","year":"2024","batch":"2024 (SEP)","regno":"950124775","code":"SDU/2024 (SEP)/ORTHO/950124775","email":"","contact":"","guide":"DR. NISHANT GUPTA\nDR. TINA CHUGH","topic":"","status":"COURSEWORK EXAM","rac":"RAC 1"},{"id":"P2024S19","sno":19,"name":"SEEMA BISHT (MEDICAL BIOCHEMISTRY)","year":"2024","batch":"2024 (SEP)","regno":"950124776","code":"SDU/2024 (SEP)/M-BIOC/950124776","email":"","contact":"","guide":"DR. JUHI AGRAWAL","topic":"ENHANCED ANTICANCER POTENTIAL OF CURCUMA CAESIA IN COMBINATION WITH DOCETAXEL AGAINST BREAST CANCER CELLS.","status":"COURSEWORK EXAM","rac":"RAC 1"},{"id":"P2024S20","sno":20,"name":"SHABIR UD DIN LONE (PHYSIOLOGY)","year":"2024","batch":"2024 (SEP)","regno":"950124777","code":"SDU/2024 (SEP)/PHYSIO/950124777","email":"","contact":"","guide":"DR. MANISHA GUPTA","topic":"","status":"COURSEWORK EXAM","rac":"RAC 1"},{"id":"P2024S21","sno":21,"name":"YASHASHVI SHARMA (CLINICAL PSYCHOLOGY)","year":"2024","batch":"2024 (SEP)","regno":"950124778","code":"SDU/2024 (SEP)/CPSY/950124778","email":"","contact":"","guide":"DR. RANI SRIVASTAVA","topic":"DEVELOPMENT OF NEED BASED SUPPORT MODULE FOR PARENTS OF CHILDREN WITH AUTISM","status":"COURSEWORK EXAM","rac":"RAC 2"},{"id":"P2024D01","sno":1,"name":"ANKITA DADHICH (MEDICAL ANATOMY)","year":"2024","batch":"2024 (DEC)","regno":"950124779","code":"SDU/2024 (DEC)/M-ANAT/950124779","email":"","contact":"","guide":"DR. SONIYA GUPTA","topic":"","status":"ELIGIBLE FOR RAC PROTOCOL","rac":"RAC 1"},{"id":"P2024D02","sno":2,"name":"ARBAZ KHAN (MEDICAL BIOCHEMISTRY)","year":"2024","batch":"2024 (DEC)","regno":"950124780","code":"SDU/2024 (DEC)/M-BIOC/950124780","email":"","contact":"","guide":"DR. JYOTI BATRA","topic":"THE ROLE AND MODULATION OF PROTEIN ARGININE METHYLTRANSFERASE 5 (PRMT5) AND POLY (ADP-RIBOSE) POLYMERASE (PARP) IN HIGH-GRADE SEROUS OVARIAN CANCER HGSOC","status":"ELIGIBLE FOR RAC PROTOCOL","rac":"RAC 2"},{"id":"P2024D03","sno":3,"name":"AYUSHI SINGH (MEDICAL BIOCHEMISTRY)","year":"2024","batch":"2024 (DEC)","regno":"950124781","code":"SDU/2024 (DEC)/M-BIOC/950124781","email":"","contact":"","guide":"DR. JYOTI BATRA","topic":"A CROSS SECTIONAL STUDY OF IRON PROFILING & APOLIPOPROTEIN POLYMORPHISM IN ALZHEIMER DISEASE & FRONTOTEMPORAL DISEASE IN NORTH INDIAN POPULATION.","status":"ELIGIBLE FOR RAC PROTOCOL","rac":"RAC 2"},{"id":"P2024D04","sno":4,"name":"G. EGAMBARAM (ORTHOPAEDICS (OCCUPATIONAL THERAPY))","year":"2024","batch":"2024 (DEC)","regno":"950124782","code":"SDU/2024 (DEC)/OCCT/950124782","email":"egambaram.g@gmail.com","contact":"","guide":"DR. R.K SHARMA","topic":"Effectiveness of Occupational Therapy-Guided Ergonomic Modifications on Postural Control and Prevocational Skills in Children with Neurodevelopmental Disorders","status":"ELIGIBLE FOR RAC PROTOCOL","rac":"RAC 1"},{"id":"P2024D05","sno":5,"name":"KHUSHBOO SHUKLA (MEDICAL ANATOMY)","year":"2024","batch":"2024 (DEC)","regno":"950124783","code":"SDU/2024 (DEC)/M-ANAT/950124783","email":"","contact":"","guide":"DR. SONIYA GUPTA","topic":"ASSOCIATION OF NOS3, MTHFR AND AGTR1 GENE POLYMORPHISMS AND PROMOTER METHYLATION OF NOS3 AND FLT1 WITH SUSCEPTIBILITY AND SEVERITY OF PREECLAMPSIA IN NORTH INDIAN WOMEN","status":"ELIGIBLE FOR RAC PROTOCOL","rac":"RAC 1"},{"id":"P2024D06","sno":6,"name":"MD SAQUIB AHMAD (MEDICAL ANATOMY)","year":"2024","batch":"2024 (DEC)","regno":"950124784","code":"SDU/2024 (DEC)/M-ANAT/950124784","email":"","contact":"","guide":"DR. SONIYA GUPTA","topic":"MORPHOMETRIC ANALYSIS OF THE KNEE JOINT AND IT'S IMPLICATIONS IN TOTAL KNEE ARTHROPLASTY :A RADIOLOGICAL PERSPECTIVE","status":"ELIGIBLE FOR RAC PROTOCOL","rac":"RAC 1"},{"id":"P2024D07","sno":7,"name":"MEMOONA (MEDICAL MICROBIOLOGY)","year":"2024","batch":"2024 (DEC)","regno":"950124785","code":"SDU/2024 (DEC)/M-MICR/950124785","email":"memoonakhan393@gmail.com","contact":"","guide":"DR. RITU JAIN","topic":"","status":"ELIGIBLE FOR RAC PROTOCOL","rac":"RAC 1"},{"id":"P2024D08","sno":8,"name":"NEHA JETLI (COMMUNITY MEDICINE)","year":"2024","batch":"2024 (DEC)","regno":"950124786","code":"SDU/2024 (DEC)/CMED/950124786","email":"nehajetli14@gmail.com","contact":"","guide":"DR. SYED HASAN NAWAZ ZAIDI","topic":"","status":"ELIGIBLE FOR RAC PROTOCOL","rac":"RAC 1"},{"id":"P2024D09","sno":9,"name":"RUKAMANEE (MIT (RADIO-DIAGNOSIS))","year":"2024","batch":"2024 (DEC)","regno":"950124787","code":"SDU/2024 (DEC)/MIT-RD/950124787","email":"rukamanee6@gmail.com","contact":"","guide":"PROF. DR. ASHISH KUMAR SHUKLA","topic":"QUANTITATIVE AIRWAY WALL THICKNESS AND LUMEN MORPHOMETRY IN CHRONIC AIRWAY DISEASES USING HIGH-RESOLUTION CT. (HRCT).","status":"ELIGIBLE FOR RAC PROTOCOL","rac":"RAC 2"},{"id":"P2024D10","sno":10,"name":"SHIVANSHU CHAUHAN (MIT (RADIO-DIAGNOSIS))","year":"2024","batch":"2024 (DEC)","regno":"950124788","code":"SDU/2024 (DEC)/MIT-RD/950124788","email":"shivanshuchauhan025@gmail.com","contact":"","guide":"PROF. DR. ASHISH KUMAR SHUKLA","topic":"DIFFUSION TENSOR IMAGING BIOMARKERS OF NEUROINFLAMMATION AND WHITE MATTER INTEGRITY IN CENTRAL NERVOUS SYSTEM INFECTION: CORRELATION WITH CLINICAL OUTCOMES","status":"ELIGIBLE FOR RAC PROTOCOL","rac":"RAC 3"},{"id":"P2024D11","sno":11,"name":"SHRUTI YADAV (MEDICAL MICROBIOLOGY)","year":"2024","batch":"2024 (DEC)","regno":"950124789","code":"SDU/2024 (DEC)/M-MICR/950124789","email":"yadav.shruti281211@gmail.com","contact":"","guide":"DR. RITU JAIN","topic":"","status":"ELIGIBLE FOR RAC PROTOCOL","rac":"RAC 1"},{"id":"P2024D12","sno":12,"name":"SMRUTI MEERA SAHOO (ORTHOPAEDICS (OCCUPATIONAL THERAPY))","year":"2024","batch":"2024 (DEC)","regno":"950124790","code":"SDU/2024 (DEC)/OCCT/950124790","email":"mhandotist.95@gmail.com","contact":"","guide":"DR. R.K SHARMA","topic":"","status":"ELIGIBLE FOR RAC PROTOCOL","rac":"RAC 1"},{"id":"P2024D13","sno":13,"name":"ARBAZ KHAN (MEDICAL BIOCHEMISTRY)","year":"2024","batch":"2024 (DEC)","regno":"950124780","code":"SDU/2024 (DEC)/M-BIOC/950124780","email":"","contact":"","guide":"DR. JYOTI BATRA","topic":"THE ROLE AND MODULATION OF PROTEIN ARGININE METHYLTRANSFERASE 5 (PRMT5) AND POLY (ADP-RIBOSE) POLYMERASE (PARP) IN HIGH-GRADE SEROUS OVARIAN CANCER HGSOC","status":"ELIGIBLE FOR RAC PROTOCOL","rac":""},{"id":"P2024D14","sno":14,"name":"NEHA JETLI (COMMUNITY MEDICINE)","year":"2024","batch":"2024 (DEC)","regno":"950124786","code":"SDU/2024 (DEC)/CMED/950124786","email":"","contact":"","guide":"DR. SYED HASAN NAWAZ ZAIDI","topic":"","status":"ELIGIBLE FOR RAC PROTOCOL","rac":""},{"id":"P2024D15","sno":15,"name":"RUKAMANEE (MIT (RADIO-DIAGNOSIS))","year":"2024","batch":"2024 (DEC)","regno":"950124787","code":"SDU/2024 (DEC)/MIT-RD/950124787","email":"","contact":"","guide":"PROF. DR. ASHISH KUMAR SHUKLA","topic":"QUANTITATIVE AIRWAY WALL THICKNESS AND LUMEN MORPHOMETRY IN CHRONIC AIRWAY DISEASES USING HIGH-RESOLUTION CT. (HRCT).","status":"ELIGIBLE FOR RAC PROTOCOL","rac":""},{"id":"P2024D16","sno":16,"name":"SHIVANSHU CHAUHAN (MIT (RADIO-DIAGNOSIS))","year":"2024","batch":"2024 (DEC)","regno":"950124788","code":"SDU/2024 (DEC)/MIT-RD/950124788","email":"","contact":"","guide":"PROF. DR. ASHISH KUMAR SHUKLA","topic":"DIFFUSION TENSOR IMAGING BIOMARKERS OF NEUROINFLAMMATION AND WHITE MATTER INTEGRITY IN CENTRAL NERVOUS SYSTEM INFECTION: CORRELATION WITH CLINICAL OUTCOMES","status":"ELIGIBLE FOR RAC PROTOCOL","rac":""},{"id":"P2025J01","sno":1,"name":"AMIT SINGHAL (PHARMACOLOGY)","year":"2025","batch":"2025 (JUL)","regno":"","code":"SDU/2025 (JUL)/PHARM/","email":"","contact":"","guide":"DR. MOHD. SAJID KHAN (TENTATIVE)","topic":"","status":"COURSEWORK","rac":""},{"id":"P2025J02","sno":2,"name":"NEHA CHAUDHARY (MEDICAL ANATOMY)","year":"2025","batch":"2025 (JUL)","regno":"","code":"SDU/2025 (JUL)/M-ANAT/","email":"","contact":"","guide":"DR. SONIYA GUPTA","topic":"","status":"COURSEWORK","rac":""},{"id":"P2025J03","sno":3,"name":"VRATIKA ARYA (MIT (RADIO-DIAGNOSIS))","year":"2025","batch":"2025 (JUL)","regno":"","code":"SDU/2025 (JUL)/MIT-RD/","email":"","contact":"","guide":"DR. ASHISH KUMAR SHUKLA","topic":"","status":"COURSEWORK","rac":""},{"id":"P2025J04","sno":4,"name":"YASHIKA SHARMA (MIT (RADIO-DIAGNOSIS))","year":"2025","batch":"2025 (JUL)","regno":"","code":"SDU/2025 (JUL)/MIT-RD/","email":"","contact":"","guide":"DR. ASHISH KUMAR SHUKLA","topic":"","status":"COURSEWORK","rac":"RAC 1"},{"id":"P2025J05","sno":5,"name":"BHARAT BHASHAN DAGAR (MIT (RADIO-DIAGNOSIS))","year":"2025","batch":"2025 (JUL)","regno":"","code":"SDU/2025 (JUL)/MIT-RD/","email":"","contact":"","guide":"DR. ASHISH KUMAR SHUKLA","topic":"","status":"COURSEWORK","rac":""},{"id":"P2025J06","sno":6,"name":"PRATISTHA SRIVASTAVA (MEDICAL BIOCHEMISTRY)","year":"2025","batch":"2025 (JUL)","regno":"","code":"SDU/2025 (JUL)/M-BIOC/","email":"","contact":"","guide":"DR. JUHI AGARWAL","topic":"","status":"COURSEWORK","rac":"RAC 1"},{"id":"P2025J07","sno":7,"name":"JYOTI GREWAL (PHARMACOLOGY)","year":"2025","batch":"2025 (JUL)","regno":"","code":"SDU/2025 (JUL)/PHARM/","email":"","contact":"","guide":"DR. MOHD. SAJID KHAN (TENTATIVE)","topic":"","status":"COURSEWORK","rac":""},{"id":"P2025D01","sno":1,"name":"KM HIMANI CHAUDHARY (MEDICAL ANATOMY)","year":"2025","batch":"2025 (DEC)","regno":"","code":"","email":"himani1572000@gmail.com","contact":"7300907644","guide":"Dr. Soniya Gupta","topic":"","status":"","rac":""},{"id":"P2025D02","sno":2,"name":"MUKESH CHAND (MEDICAL ANATOMY)","year":"2025","batch":"2025 (DEC)","regno":"","code":"","email":"mcbt_mtr@rediffmail.com","contact":"9027431436","guide":"Dr. Swati Yadav","topic":"","status":"","rac":""},{"id":"P2025D03","sno":3,"name":"SHIVANGINI SHARMA (MEDICAL ANATOMY)","year":"2025","batch":"2025 (DEC)","regno":"","code":"","email":"shivisharma17961@gmail.com","contact":"9458708976","guide":"Dr.","topic":"","status":"","rac":""},{"id":"P2025D04","sno":4,"name":"GAURI MUDGAL (MEDICAL PHYSIOLOGY)","year":"2025","batch":"2025 (DEC)","regno":"","code":"","email":"gaurimudgal595@gmail.com","contact":"8178545563","guide":"Dr. Dr. Rinku Garg","topic":"","status":"","rac":""},{"id":"P2025D05","sno":5,"name":"ITISHA SRIVASTAVA (MEDICAL PHYSIOLOGY)","year":"2025","batch":"2025 (DEC)","regno":"","code":"","email":"itisha04@gmail.com","contact":"8130886760","guide":"Dr.","topic":"","status":"","rac":""},{"id":"P2025D06","sno":6,"name":"MUNEEB KOSVI (MEDICAL PHYSIOLOGY)","year":"2025","batch":"2025 (DEC)","regno":"","code":"","email":"muneeb37@gmail.com","contact":"9013325895","guide":"Dr. Runku Garg","topic":"","status":"","rac":""},{"id":"P2025D07","sno":7,"name":"PRABHA KUMARI (MEDICAL PHYSIOLOGY)","year":"2025","batch":"2025 (DEC)","regno":"","code":"","email":"prabhasingh1414@gmail.com","contact":"9811880475","guide":"Dr.","topic":"","status":"","rac":""},{"id":"P2025D08","sno":8,"name":"KULDEEP VERMA (MEDICAL BIOCHEMISTRY)","year":"2025","batch":"2025 (DEC)","regno":"","code":"","email":"vermakuldeep.1793@gmail.com","contact":"8917042798","guide":"Dr.","topic":"","status":"","rac":""},{"id":"P2025D09","sno":9,"name":"RAJNEESH KUMAR DUTT (MEDICAL BIOCHEMISTRY)","year":"2025","batch":"2025 (DEC)","regno":"","code":"","email":"duttraj555@gmail.com","contact":"9520040091","guide":"Dr.","topic":"","status":"","rac":""},{"id":"P2025D10","sno":10,"name":"SAHANA H C (MEDICAL BIOCHEMISTRY)","year":"2025","batch":"2025 (DEC)","regno":"","code":"","email":"sahanagowda664@gmail.com","contact":"9945799029","guide":"Dr.","topic":"","status":"","rac":""},{"id":"P2025D11","sno":11,"name":"ABHAY KUMAR (MEDICAL MICROBIOLOGY)","year":"2025","batch":"2025 (DEC)","regno":"","code":"","email":"abhaykumar21med.micro@gmail.com","contact":"9758057879","guide":"Dr.","topic":"","status":"","rac":""},{"id":"P2025D12","sno":12,"name":"DIXIT SAINI (MEDICAL MICROBIOLOGY)","year":"2025","batch":"2025 (DEC)","regno":"","code":"","email":"dixitsaini1999@gmail.com","contact":"7835900857","guide":"Dr.","topic":"","status":"","rac":""},{"id":"P2025D13","sno":13,"name":"MANU KUMARI (MEDICAL MICROBIOLOGY)","year":"2025","batch":"2025 (DEC)","regno":"","code":"","email":"manukumari8218@gmail.com","contact":"8279967144","guide":"Dr.","topic":"","status":"","rac":""},{"id":"P2025D14","sno":14,"name":"RISHIKA (MEDICAL MICROBIOLOGY)","year":"2025","batch":"2025 (DEC)","regno":"","code":"","email":"rs9118971@gmail.com","contact":"7300794686","guide":"Dr.","topic":"","status":"","rac":""},{"id":"P2025D15","sno":15,"name":"URVASHI SHARMA (MEDICAL MICROBIOLOGY)","year":"2025","batch":"2025 (DEC)","regno":"","code":"","email":"survashi856@gmail.com","contact":"7455854670","guide":"Dr.","topic":"","status":"","rac":""},{"id":"P2025D16","sno":16,"name":"NUSRAT NABI (MEDICAL PHARMACOLOGY)","year":"2025","batch":"2025 (DEC)","regno":"","code":"","email":"nusratnabinaikoo@gmail.com","contact":"8953976858","guide":"Dr.","topic":"","status":"","rac":""},{"id":"P2025D17","sno":17,"name":"PRIYA TOMAR (MEDICAL HAEMATOPATH\n[PATHOLOGY])","year":"2025","batch":"2025 (DEC)","regno":"","code":"","email":"Priyatomarch@gmail.com","contact":"8929195295","guide":"Dr.","topic":"","status":"","rac":""},{"id":"P2025D18","sno":18,"name":"SALONI MARTOLIA (MEDICAL IMAGING TECH)","year":"2025","batch":"2025 (DEC)","regno":"","code":"","email":"martoliasaloni@gmail.com","contact":"7238064639","guide":"Dr.","topic":"","status":"","rac":""},{"id":"P2025D19","sno":19,"name":"KRITI AGARWAL (PERIODONTOLOGY)","year":"2025","batch":"2025 (DEC)","regno":"","code":"","email":"drkritimds@gmail.com","contact":"9520040091","guide":"Dr.","topic":"","status":"","rac":""},{"id":"P2025D20","sno":20,"name":"NIKUNJ MOUDGIL (BIOTECHNOLOGY\n(BIOMEDICAL RESEARCH))","year":"2025","batch":"2025 (DEC)","regno":"","code":"","email":"nikunjmoudgil@gmail.com","contact":"9911109919","guide":"Dr.","topic":"","status":"","rac":""},{"id":"P2025D21","sno":21,"name":"ARUNA MAURYA (YOGA)","year":"2025","batch":"2025 (DEC)","regno":"","code":"","email":"arunamaurya29@gmail.com","contact":"9413873344","guide":"Dr.","topic":"","status":"","rac":""},{"id":"P2025D22","sno":22,"name":"AMJAD ALI (MEDICAL MICROBIOLOGY)","year":"2025","batch":"2025 (DEC)","regno":"","code":"","email":"aliamjad8679@gmail.com","contact":"8527846877","guide":"Dr.","topic":"","status":"","rac":""},{"id":"P2026M01","sno":1,"name":"MUSKAAN BAWEJA (DBMR (Bioinformatics))","year":"2026","batch":"2026 (MAR)","regno":"","code":"","email":"muskaanbaweja2000@gmail.com","contact":"9868368872","guide":"Dr. Gunjan Uttam","topic":"","status":"","rac":""},{"id":"P2026M02","sno":2,"name":"AISHWARYA (CLINICAL PSYCHOLOGY)","year":"2026","batch":"2026 (MAR)","regno":"","code":"","email":"aishwaryadohare98@gmail.com","contact":"9953913390","guide":"Dr.","topic":"","status":"","rac":""},{"id":"P2026M03","sno":3,"name":"ISHIKA SONI (CLINICAL PSYCHOLOGY)","year":"2026","batch":"2026 (MAR)","regno":"","code":"","email":"ishaverma.272009@gmail.com","contact":"7535856454","guide":"Dr.","topic":"","status":"","rac":""},{"id":"P2026M04","sno":4,"name":"BHARTI SHARMA (MEDICAL BIOCHEMISTRY)","year":"2026","batch":"2026 (MAR)","regno":"","code":"","email":"bhartish2000@gmail.com","contact":"7583099815","guide":"Dr. Juhi Aggarwal","topic":"Deciphering the regulatory landscape of mRNA-miRNA IncRNA Interactions in vascular smooth muscle cell phenotypic Transitions During Atherosclerosis","status":"","rac":""},{"id":"P2026M05","sno":5,"name":"DIYA CHAWLA (MEDICAL BIOCHEMISTRY)","year":"2026","batch":"2026 (MAR)","regno":"","code":"","email":"diyachawla71@gmail.com","contact":"9548702001","guide":"Dr. Juhi Aggarwal","topic":"","status":"","rac":""},{"id":"P2026M06","sno":6,"name":"NITIN PATRICK (MEDICAL BIOCHEMISTRY)","year":"2026","batch":"2026 (MAR)","regno":"","code":"","email":"nitinpatrick3@gmail.com","contact":"8037582812","guide":"Dr. Juhi Aggarwal","topic":"","status":"","rac":""},{"id":"P2026M07","sno":7,"name":"SUGASTHA ANWAR LASKAR (MEDICAL BIOCHEMISTRY)","year":"2026","batch":"2026 (MAR)","regno":"","code":"","email":"s9laskar@gmail.com","contact":"8414085241","guide":"Dr. Jyoti Batra","topic":"","status":"","rac":""},{"id":"P2026M08","sno":8,"name":"KAUSHAL SHARMA (MEDICAL IMAGING TECH.)","year":"2026","batch":"2026 (MAR)","regno":"","code":"","email":"kaushalsharma8808@gmail.com","contact":"9717540558","guide":"Dr.","topic":"","status":"","rac":""},{"id":"P2026M09","sno":9,"name":"ROHINI KUMARI GUPTA (MEDICAL IMAGING TECH.)","year":"2026","batch":"2026 (MAR)","regno":"","code":"","email":"rohinigupta1998rg@gmail.com","contact":"7387870385","guide":"Dr.","topic":"","status":"","rac":""},{"id":"P2026M10","sno":10,"name":"SHIKHA KUMARI (MEDICAL IMAGING TECH.)","year":"2026","batch":"2026 (MAR)","regno":"","code":"","email":"shikhakumari1218@gmail.com","contact":"7983246045","guide":"Dr. Bhumi Modi","topic":"","status":"","rac":""},{"id":"P2026M11","sno":11,"name":"SHUMAILA (MEDICAL PHYSIOLOGY)","year":"2026","batch":"2026 (MAR)","regno":"","code":"","email":"shumaila.ansari840@gmail.com","contact":"8920987153","guide":"Dr. Rinku Garg","topic":"","status":"","rac":""},{"id":"P2026M12","sno":12,"name":"ADITYA KUMAR (OPTOMETRY)","year":"2026","batch":"2026 (MAR)","regno":"","code":"","email":"kumaraditya8009@gmail.com","contact":"7279071536","guide":"Dr.","topic":"","status":"","rac":""},{"id":"P2026M13","sno":13,"name":"SAURABH SHUKLA (OPTOMETRY)","year":"2026","batch":"2026 (MAR)","regno":"","code":"","email":"shukla.ji.saurabh@gmail.com","contact":"7065771910","guide":"Dr. Ayub Ali","topic":"","status":"","rac":""},{"id":"P2026M14","sno":14,"name":"KM AROHI MISHRA (ORTHOPAEDICS [ PHYSIOTHERAPY])","year":"2026","batch":"2026 (MAR)","regno":"","code":"","email":"mishra.arohi19@gmail.com","contact":"9627794000","guide":"Dr. Ish Kumar Dhami","topic":"","status":"","rac":""},{"id":"P2026M15","sno":15,"name":"SHREYA MISHRA (ORTHOPAEDICS [ PHYSIOTHERAPY])","year":"2026","batch":"2026 (MAR)","regno":"","code":"","email":"shreyamishra988@gmail.com","contact":"9792071988","guide":"Dr. Ish Kumar Dhami","topic":"","status":"","rac":""},{"id":"P2026M16","sno":16,"name":"DUSHYANT CHAUHAN (PROSTHODONTICS & CROWN & BRIDGE)","year":"2026","batch":"2026 (MAR)","regno":"","code":"","email":"dushyant.chauhan16@gmail.com","contact":"7291048871","guide":"Dr.","topic":"","status":"","rac":""},{"id":"P2026M17","sno":17,"name":"GAURAV SWAROOP GUPTA (YOGA)","year":"2026","batch":"2026 (MAR)","regno":"","code":"","email":"wakeupgaurav2@gmail.com","contact":"8619624196","guide":"Dr.","topic":"","status":"","rac":""}];
+
+function _stuKey(s){ const n = String(s.name||'').replace(/\s*\(.*\)\s*$/,'').replace(/\s+/g,' ').trim().toUpperCase(); return String(s.year)+'|'+n; }
 async function loadStudents(){
-  LOADING = true;
-  LOAD_ERROR = null;
+  // 1) Show Excel data straight away
+  STUDENTS = EXCEL_STUDENTS.map(s => Object.assign({}, s));
+  YEARS = computeYears();
+  LOADING = false; LOAD_ERROR = null;
   render();
+  // 2) Then merge anything extra from the Google Sheet (new scholars added on the site, RAC ticks)
   try {
     const res = await fetch(API_URL + '?action=list');
     const data = await res.json();
-    if(data && data.error) throw new Error(data.error);
-    STUDENTS = data;
+    if(!Array.isArray(data)) return;
+    const byKey = new Map(STUDENTS.map(s => [_stuKey(s), s]));
+    data.forEach(a => {
+      const m = byKey.get(_stuKey(a));
+      if(m){ m.id = a.id || m.id; if(a.rac) m.rac = a.rac; }
+      // records not in Excel (stray/old sheet rows, e.g. date-as-year) are ignored: Excel is the source
+    });
     YEARS = computeYears();
-  } catch(err){
-    LOAD_ERROR = err.message || String(err);
-  } finally {
-    LOADING = false;
     render();
-  }
+  } catch(err){ /* offline or sheet unreachable: Excel data stays */ }
 }
 function computeYears(){ return [...new Set(STUDENTS.map(s=>s.year))].sort(); }
 
@@ -343,7 +362,7 @@ function findStudent(id){ return STUDENTS.find(s=>s.id===id); }
 
 function statusClass(status){
   const s = (status||'').toLowerCase();
-  if(s.includes('pass') || s.includes('completed')) return 'status-pass';
+  if(s.includes('pass') || s.includes('completed') || s.includes('awarded')) return 'status-pass';
   if(s === '' || s.includes('microbiology')) return 'status-flag';
   return 'status-ongoing';
 }
@@ -381,14 +400,22 @@ function render(){
     app.innerHTML = renderDirectory();
     setCrumbs([{label:'PhD Student Directory'}]);
   } else if(parts[0] === 'year' && parts[1]){
-    app.innerHTML = renderRoster(parts[1]);
-    setCrumbs([{label:'Directory', href:'#/directory'},{label:'Batch '+parts[1]}]);
-    attachRosterSearch();
+    const y = parts[1], mon = parts[2] || '';
+    if(!mon && monthsOfYear(y).length){
+      app.innerHTML = renderMonths(y);
+      setCrumbs([{label:'Directory', href:'#/directory'},{label:y}]);
+    } else {
+      app.innerHTML = renderRoster(y, mon);
+      setCrumbs(mon
+        ? [{label:'Directory', href:'#/directory'},{label:y, href:'#/year/'+y},{label:monthName(mon)+' batch'}]
+        : [{label:'Directory', href:'#/directory'},{label:'Batch '+y}]);
+      attachRosterSearch();
+    }
   } else if(parts[0] === 'student' && parts[1]){
     const st = findStudent(parts[1]);
     if(st){
       app.innerHTML = renderDetail(st);
-      setCrumbs([{label:'Directory', href:'#/directory'},{label:'Batch '+st.year, href:'#/year/'+st.year},{label:st.name}]);
+      setCrumbs([{label:'Directory', href:'#/directory'},{label:st.year, href:'#/year/'+st.year},...(monOf(st) ? [{label:monthName(monOf(st)), href:'#/year/'+st.year+'/'+monOf(st)}] : []),{label:st.name}]);
       attachSideSearch(st.id);
     } else { app.innerHTML = renderNotFound(); }
   } else {
@@ -475,15 +502,17 @@ function renderDirectory(){
 }
 
 /* ---------------- ROSTER ---------------- */
-function renderRoster(year){
-  const list = byYear(year);
+function renderRoster(year, mon){
+  mon = mon || '';
+  const list = mon ? byBatch(year, mon) : byYear(year);
   if(list.length===0) return renderNotFound();
+  const title = esc(String(year) + (mon ? ' · ' + monthName(mon) : ''));
   return `
   <div class="wrap section" style="padding-top:60px;">
     <div class="section-head">
       <div>
-        <span class="index-no">Batch ${year}</span>
-        <h2>Scholar roster — ${year}</h2>
+        <span class="index-no">Batch ${title}</span>
+        <h2>Scholar roster — ${title}</h2>
         <div class="sub">${list.length} candidate${list.length!==1?'s':''} admitted this batch. Click a name to open the full record.</div>
       </div>
     </div>
@@ -492,11 +521,11 @@ function renderRoster(year){
         <span class="mono" style="font-size:13px;color:var(--text-soft);">⌕</span>
         <input id="rosterSearch" placeholder="Filter by name, guide, or topic…">
       </div>
-      <button class="btn-add" onclick="openStudentForm('add','${year}')">+ Add New Scholar</button>
+      <button class="btn-add" onclick="openStudentForm('add','${year}','${mon}')">+ Add New Scholar</button>
     </div>
     <table class="roster-table">
       <thead><tr><th>No.</th><th>Scholar</th><th>Guide</th><th>Research Topic</th><th>Status</th></tr></thead>
-      <tbody id="rosterBody">${list.map(rosterRow).join('')}</tbody>
+      <tbody id="rosterBody">${rosterBodyHTML(list)}</tbody>
     </table>
   </div>`;
 }
@@ -520,8 +549,10 @@ function attachRosterSearch(){
   input.addEventListener('input', ()=>{
     const q = input.value.toLowerCase();
     document.querySelectorAll('#rosterBody tr').forEach(row=>{
+      if(!row.dataset.search) return;
       row.style.display = row.dataset.search.includes(q) ? '' : 'none';
     });
+    syncGroupRows();
   });
 }
 
@@ -543,9 +574,12 @@ function sidePanelHTML(activeId, filter=''){
 }
 
 function renderDetail(s){
-  const list = byYear(s.year);
+  const mk = monOf(s);
+  const list = byBatch(s.year, mk);
+  const backHref = '#/year/' + s.year + (mk ? '/' + mk : (monthsOfYear(s.year).length ? '/NA' : ''));
   const idx = list.findIndex(x=>x.id===s.id);
   const prev = list[idx-1], next = list[idx+1];
+  const nd = splitNameDept(s.name);
   return `
   <div class="wrap" style="padding-top:36px;padding-bottom:80px;">
   <div class="detail-shell">
@@ -557,9 +591,8 @@ function renderDetail(s){
     <div class="main-panel">
       <div class="dp-head">
         <div>
-          <div class="dp-id">Registration № ${esc(s.regno) || '— pending —'}</div>
-          <h3 class="dp-name">${esc(s.name)}</h3>
-          <div class="dp-batch">Admission Batch ${s.year} · Serial No. ${String(s.sno).padStart(2,'0')}</div>
+          <h3 class="dp-name">${esc(nd.name)}</h3>
+          ${nd.dept ? `<div class="dp-dept">${esc(nd.dept)}</div>` : ''}
         </div>
         <div style="display:flex;align-items:center;gap:16px;">
           <button class="nav-btn" style="cursor:pointer;background:none;" onclick="openStudentForm('edit','${esc(s.id)}')">✎ Edit record</button>
@@ -577,7 +610,7 @@ function renderDetail(s){
         <div class="field"><div class="k">Supervising guide</div>
           <div class="v ${s.guide?'':'empty'}">${esc(s.guide) || 'Not yet assigned'}</div></div>
         <div class="field"><div class="k">RAC status</div>
-          <div class="v ${s.rac?'':'empty'}">${esc(s.rac) || 'RAC not yet started'}</div></div>
+          <div class="v rac-box" id="racBox">${racWidgetHTML(s)}</div></div>
       </div>
 
       <div class="topic-block">
@@ -589,7 +622,7 @@ function renderDetail(s){
 
       <div class="nav-buttons">
         ${prev ? `<a class="nav-btn" href="#/student/${prev.id}">← ${esc(prev.name)}</a>` : ''}
-        <a class="nav-btn" href="#/year/${s.year}">Back to batch ${s.year} roster</a>
+        <a class="nav-btn" href="${backHref}">Back to ${mk ? esc(monthName(mk)) + ' ' : ''}batch ${s.year} roster</a>
         ${next ? `<a class="nav-btn" href="#/student/${next.id}">${esc(next.name)} →</a>` : ''}
       </div>
       <div style="margin-top:20px;">
@@ -608,6 +641,210 @@ function attachSideSearch(activeId){
   });
 }
 
+/* ---------------- BATCH GROUPING (roster) ---------------- */
+const MONTHS = {JAN:'January',FEB:'February',MAR:'March',APR:'April',MAY:'May',JUN:'June',JUL:'July',AUG:'August',SEP:'September',OCT:'October',NOV:'November',DEC:'December'};
+const MONTH_ORDER = Object.keys(MONTHS);
+function batchKey(s){
+  const str = v => v==null ? '' : String(v);
+  const primary = [s.batch, s.regno, s.code, s.year].map(str);
+  const skip = ['topic','name','guide','email','contact','id','status','rac','sno'];
+  const extra = Object.keys(s).filter(k => !skip.includes(k) && !['batch','regno','code','year'].includes(k)).map(k => str(s[k]));
+  const NAMES = '(january|jan|february|feb|march|mar|april|apr|may|june|jun|july|jul|august|aug|september|sept|sep|october|oct|november|nov|december|dec)';
+  const paren = t => {
+    const m = t.match(/(\d{4})\s*\(\s*([A-Za-z]{3,})\.?\s*\)/);
+    if(m){ const mon = m[2].slice(0,3).toUpperCase(); if(MONTHS[mon]) return m[1] + ' (' + mon + ')'; }
+    return '';
+  };
+  for(const t of primary){
+    let r = paren(t); if(r) return r;
+    if(/^\d{4}-\d{2}-\d{2}/.test(t.trim())){
+      const d = new Date(t.trim());
+      if(!isNaN(d)){ const d2 = new Date(d.getTime() + 12*3600*1000); return d2.getUTCFullYear() + ' (' + MONTH_ORDER[d2.getUTCMonth()] + ')'; }
+    }
+    const m = t.match(new RegExp('(\\d{4})[\\s,\\-]+' + NAMES + '\\b', 'i'));
+    if(m){ const mon = m[2].slice(0,3).toUpperCase(); if(MONTHS[mon]) return m[1] + ' (' + mon + ')'; }
+  }
+  for(const t of extra){ const r = paren(t); if(r) return r; }
+  return '';
+}
+function monOf(s){ const m = batchKey(s).match(/\(([A-Z]{3})\)/); return m ? m[1] : ''; }
+function monthName(m){ return MONTHS[m] || 'Batch not specified'; }
+function byBatch(y, mon){ const want = (mon === 'NA' || !mon) ? '' : mon; return byYear(y).filter(s => monOf(s) === want); }
+function monthsOfYear(y){
+  const set = new Set(byYear(y).map(monOf));
+  if(![...set].some(Boolean)) return [];
+  return [...set].map(m => m || 'NA').sort((a,b) => (a==='NA'?99:MONTH_ORDER.indexOf(a)) - (b==='NA'?99:MONTH_ORDER.indexOf(b)));
+}
+function renderMonths(y){
+  const mons = monthsOfYear(y), all = byYear(y), ys = esc(String(y));
+  return `
+  <div class="wrap section" style="padding-top:60px;">
+    <div class="section-head">
+      <div>
+        <span class="index-no">Year ${ys}</span>
+        <h2>${ys} — choose a batch</h2>
+        <div class="sub">${all.length} scholar${all.length!==1?'s':''} across ${mons.length} batch${mons.length!==1?'es':''}. Select a month to view its scholars.</div>
+      </div>
+      <button class="btn-add" onclick="openStudentForm('add','${ys}')">+ Add New Scholar</button>
+    </div>
+    <div class="year-grid">
+      ${mons.map(m => {
+        const l = byBatch(y, m);
+        const pass = l.filter(s => statusClass(s.status)==='status-pass').length;
+        return `
+        <div class="year-card" onclick="navigate('year/${y}/${m}')">
+          <div class="yr">${esc(monthName(m))}</div>
+          <div class="meta">${l.length} scholar${l.length!==1?'s':''} registered${pass?` · <b>${pass} awarded</b>`:''}</div>
+          <div class="arrow">View roster →</div>
+        </div>`;
+      }).join('')}
+    </div>
+  </div>`;
+}
+function batchOrder(k){
+  const m = k.match(/\(([A-Z]{3})\)/);
+  return m ? MONTH_ORDER.indexOf(m[1]) : 99;
+}
+function batchLabel(k){
+  const m = k.match(/^(\d{4}) \(([A-Z]{3})\)$/);
+  return m ? m[1] + ' · ' + MONTHS[m[2]] + ' batch' : 'Batch not specified';
+}
+function rosterBodyHTML(list){
+  const groups = new Map();
+  list.forEach(s => { const k = batchKey(s); if(!groups.has(k)) groups.set(k, []); groups.get(k).push(s); });
+  const keys = [...groups.keys()];
+  if(keys.length === 1) return list.map(rosterRow).join('');
+  keys.sort((a,b) => batchOrder(a) - batchOrder(b));
+  return keys.map(k => {
+    const g = groups.get(k);
+    return `<tr class="grp-row"><td colspan="5">${esc(batchLabel(k))} — ${g.length} scholar${g.length!==1?'s':''}</td></tr>` + g.map(rosterRow).join('');
+  }).join('');
+}
+function syncGroupRows(){
+  const rows = [...document.querySelectorAll('#rosterBody tr')];
+  let head = null, any = false;
+  const flush = () => { if(head) head.style.display = any ? '' : 'none'; };
+  rows.forEach(r => {
+    if(r.classList.contains('grp-row')){ flush(); head = r; any = false; }
+    else if(r.style.display !== 'none') any = true;
+  });
+  flush();
+}
+function splitNameDept(n){
+  const m = String(n||'').match(/^([^()]*\S)\s*\((.+)\)\s*$/);
+  return m ? {name: m[1].trim(), dept: m[2].trim()} : {name: String(n||''), dept: ''};
+}
+
+/* ---------------- RAC TRACKER (dropdown + MOM / Progress report) ---------------- */
+const RAC_MAX = 6;
+function racNorm(v){ v = String(v||'').toLowerCase(); return v==='yes' ? 'Yes' : v==='no' ? 'No' : ''; }
+function parseRac(raw){
+  const st = {cur:0, d:{}};
+  const parts = String(raw||'').trim().split('|').map(x => x.trim());
+  const head = parts[0].match(/^(?:RAC\s*)?([1-6])$/i);
+  if(!head) return st;
+  st.cur = +head[1];
+  if(parts.length === 1){
+    for(let k=1; k<st.cur; k++) st.d[k] = {m:'Yes', p:'Yes'};   // old plain value: earlier RACs treated as done
+    return st;
+  }
+  parts.slice(1).forEach(seg => {
+    const m = seg.match(/^R([1-6])\s+MOM:(Yes|No|-)\s+PR:(Yes|No|-)$/i);
+    if(m) st.d[+m[1]] = {m: racNorm(m[2]), p: racNorm(m[3])};
+  });
+  return st;
+}
+function serializeRac(st){
+  if(!st.cur) return '';
+  let out = 'RAC ' + st.cur;
+  for(let k=1; k<=RAC_MAX; k++){
+    const x = st.d[k];
+    if(x) out += ' | R' + k + ' MOM:' + (x.m || '-') + ' PR:' + (x.p || '-');
+  }
+  return out;
+}
+function racDone(st,k){ const x = st.d[k]; return !!x && x.m === 'Yes' && x.p === 'Yes'; }
+function racUnlocked(st,k){ return k === 1 || racDone(st, k-1); }
+
+function racWidgetHTML(s){
+  const st = parseRac(s.rac);
+  const id = esc(s.id);
+  let opts = '<option value="">— Select RAC —</option>';
+  for(let k=1; k<=RAC_MAX; k++){
+    const ok = racUnlocked(st,k);
+    opts += `<option value="${k}" ${st.cur===k?'selected':''} ${ok?'':'disabled'}>RAC ${k}${ok?'':' (locked)'}</option>`;
+  }
+  let sub = '';
+  if(st.cur){
+    const x = st.d[st.cur] || {m:'', p:''};
+    const yn = (f,v) => `<select class="rac-sel" onchange="racSetMP('${id}','${f}',this.value)">
+        <option value="">— Select —</option>
+        <option value="Yes" ${v==='Yes'?'selected':''}>Yes</option>
+        <option value="No" ${v==='No'?'selected':''}>No</option></select>`;
+    let note;
+    if(racDone(st, st.cur)) note = st.cur < RAC_MAX ? `RAC ${st.cur+1} unlocked.` : 'All RACs complete.';
+    else note = st.cur < RAC_MAX ? `RAC ${st.cur+1} stays locked until MOM and Progress report are both Yes.` : '';
+    sub = `<div class="rac-sub">
+        <div><label>MOM submitted</label>${yn('m', x.m)}</div>
+        <div><label>Progress report submitted</label>${yn('p', x.p)}</div>
+      </div>
+      <div class="rac-note">${note} <span id="racSaveMsg"></span></div>`;
+  } else {
+    sub = '<div class="rac-note">Choose RAC 1 to begin. <span id="racSaveMsg"></span></div>';
+  }
+  return `<select class="rac-sel" onchange="racSetCur('${id}',this.value)">${opts}</select>${sub}`;
+}
+
+function racSetCur(id, val){
+  const s = findStudent(id); if(!s) return;
+  const st = parseRac(s.rac);
+  if(!val){ st.cur = 0; }
+  else {
+    const k = +val;
+    if(!racUnlocked(st,k)) return;
+    st.cur = k;
+    if(!st.d[k]) st.d[k] = {m:'', p:''};
+  }
+  racCommit(s, st);
+}
+function racSetMP(id, f, val){
+  const s = findStudent(id); if(!s) return;
+  const st = parseRac(s.rac);
+  if(!st.cur) return;
+  const k = st.cur;
+  if(!st.d[k]) st.d[k] = {m:'', p:''};
+  st.d[k][f] = val;
+  if(!racDone(st,k)){ for(let j=k+1; j<=RAC_MAX; j++) delete st.d[j]; }
+  racCommit(s, st);
+}
+let RAC_SAVE_SEQ = 0;
+async function racCommit(s, st){
+  s.rac = serializeRac(st);
+  const box = document.getElementById('racBox');
+  if(box) box.innerHTML = racWidgetHTML(s);
+  const msg = () => document.getElementById('racSaveMsg');
+  const seq = ++RAC_SAVE_SEQ;
+  if(msg()) msg().textContent = 'Saving…';
+  const data = {name:s.name, year:s.year, regno:s.regno||'', email:s.email||'', contact:s.contact||'',
+                guide:s.guide||'', topic:s.topic||'', status:s.status||'', rac:s.rac};
+  try{
+    const res = await fetch(API_URL, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'},
+      body: JSON.stringify({action:'edit', id:s.id, data})
+    });
+    const result = await res.json();
+    if(result.error) throw new Error(result.error);
+    if(seq === RAC_SAVE_SEQ){
+      STUDENTS = result.students;
+      if(msg()) msg().textContent = 'Saved ✓';
+    }
+  } catch(err){
+    if(msg()) msg().textContent = 'Not saved';
+    alert('Could not save RAC status to the Google Sheet: ' + (err.message || err));
+  }
+}
+
 /* ---------------- ADD / EDIT SCHOLAR ---------------- */
 function nextSno(year){
   const list = byYear(year);
@@ -617,7 +854,7 @@ function genId(year){
   return String(year).replace(/\s+/g,'') + '-' + Date.now().toString(36).toUpperCase();
 }
 
-function openStudentForm(mode, arg){
+function openStudentForm(mode, arg, mon){
   const isEdit = mode === 'edit';
   const st = isEdit ? findStudent(arg) : null;
   const prefYear = isEdit ? st.year : (arg || (YEARS[YEARS.length-1] || String(new Date().getFullYear())));
@@ -647,7 +884,7 @@ function openStudentForm(mode, arg){
           </div>
           <div class="form-field">
             <label>Registration no.</label>
-            <input name="regno" value="${isEdit ? esc(st.regno) : ''}">
+            <input name="regno" value="${isEdit ? esc(st.regno) : (mon && mon!=='NA' ? esc(String(prefYear)) + ' (' + mon + ') / ' : '')}">
           </div>
           <div class="form-field">
             <label>Email address</label>
