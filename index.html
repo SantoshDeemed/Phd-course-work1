@@ -156,6 +156,9 @@
     background:linear-gradient(90deg,var(--crimson),var(--gold));
     transform:scaleX(0);transform-origin:left;transition:transform .25s ease;
   }
+  .year-card{position:relative;}
+  .card-edit{position:absolute;top:12px;right:12px;width:32px;height:32px;border:1px solid var(--line);background:var(--white);color:var(--navy);border-radius:50%;cursor:pointer;font-size:15px;line-height:1;display:flex;align-items:center;justify-content:center;transition:all .2s ease;}
+  .card-edit:hover{background:var(--navy);color:#fff;border-color:var(--navy);}
   .year-card:hover{box-shadow:var(--shadow);transform:translateY(-3px);border-color:transparent;}
   .year-card:hover::before{transform:scaleX(1);}
   .year-card:hover .arrow{transform:translateX(4px);color:var(--crimson);}
@@ -882,13 +885,49 @@ function renderMonths(y){
         const pass = l.filter(s => statusClass(s.status)==='status-pass').length;
         return `
         <div class="year-card" onclick="navigate('year/${y}/${m}')">
-          <div class="yr">${esc(monthName(m))}</div>
+          <button class="card-edit" type="button" title="Rename this batch" onclick="event.stopPropagation();openBatchRename('${esc(String(y))}','${m}')">✎</button>
+          <div class="yr" style="padding-right:30px;">${esc(monthName(m))}</div>
           <div class="meta">${l.length} scholar${l.length!==1?'s':''} registered${pass?` · <b>${pass} awarded</b>`:''}</div>
           <div class="arrow">View roster →</div>
         </div>`;
       }).join('')}
     </div>
   </div>`;
+}
+function openBatchRename(y, mon){
+  if(!canEdit()) return;
+  const n = byBatch(y, mon).length;
+  document.getElementById('modalRoot').innerHTML = `
+  <div class="modal-overlay" onclick="if(event.target===this) closeStudentForm()">
+    <div class="modal-box" style="max-width:440px">
+      <div class="modal-head"><h3>Rename batch — ${esc(y)}</h3><button class="modal-close" type="button" onclick="closeStudentForm()">&times;</button></div>
+      <form onsubmit="return applyBatchRename(event,'${esc(y)}','${mon}')">
+        <div class="modal-body">
+          <div class="form-field full">
+            <label>Batch month for these ${n} scholar${n!==1?'s':''}</label>
+            <select name="mon" required>
+              <option value="">— Select month —</option>
+              ${MONTH_ORDER.map(k => `<option value="${k}" ${k===mon?'selected':''}>${MONTHS[k]}</option>`).join('')}
+            </select>
+          </div>
+          <div style="grid-column:1/-1;font-size:12.5px;color:var(--text-soft);">If that month already exists in ${esc(y)}, the two batches join into one.</div>
+        </div>
+        <div class="modal-actions"><button type="button" class="btn-secondary" onclick="closeStudentForm()">Cancel</button><button type="submit" class="btn-add">Save</button></div>
+      </form>
+    </div>
+  </div>`;
+}
+function applyBatchRename(ev, y, mon){
+  ev.preventDefault();
+  const nm = ev.target.mon.value;
+  if(!nm || nm === mon){ closeStudentForm(); return false; }
+  const list = byBatch(y, mon);
+  const exists = byBatch(y, nm).length > 0;
+  if(exists && !confirm(MONTHS[nm] + ' ' + y + ' already has scholars. Join ' + list.length + ' more into it?')) return false;
+  list.forEach(s => { s.batch = y + ' (' + nm + ')'; });
+  saveStore(); closeStudentForm();
+  navigate('year/' + y); render();
+  return false;
 }
 function batchOrder(k){
   const m = k.match(/\(([A-Z]{3})\)/);
